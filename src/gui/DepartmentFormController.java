@@ -3,13 +3,18 @@ package gui;
 import java.net.URL;
 import java.util.ResourceBundle;
 
+import gui.util.Alerts;
 import gui.util.Constraints;
+import gui.util.Utils;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Alert.AlertType;
 import model.entities.Department;
+import model.services.DepartmentService;
 
 public class DepartmentFormController implements Initializable {
 
@@ -30,18 +35,36 @@ public class DepartmentFormController implements Initializable {
 
     private Department department;
 
+    private DepartmentService departmentService;
+
     @FXML
-    public void onBtSaveAction() {
-        System.out.println("onBtSaveAction");
+    public void onBtSaveAction(ActionEvent event) {
+        if (department == null) {
+            throw new IllegalStateException("Entity was null");
+        }
+        if (departmentService == null) {
+            throw new IllegalStateException("Service was null");
+        }
+        try {
+            department = getFormData();
+            departmentService.saveOrUpdate(department);    
+            Utils.currentStage(event).close();
+        } catch (Exception e) {
+            Alerts.showAlert("Error saving object", null, e.getMessage(), AlertType.ERROR);
+        }
     }
 
     @FXML
-    public void onBtCancelAction() {
-        System.out.println("onBtCancelAction");
+    public void onBtCancelAction(ActionEvent event) {
+        Utils.currentStage(event).close();
     }
 
     public void setDepartment(Department department) {
         this.department = department;
+    }
+    
+    public void setDepartmentService(DepartmentService departmentService) {
+        this.departmentService = departmentService;
     }
     
     @Override
@@ -60,5 +83,12 @@ public class DepartmentFormController implements Initializable {
         }
         txtId.setText(String.valueOf(department.getId()));
         txtName.setText(department.getName());
+    }
+
+    private Department getFormData() {
+        Department department = new Department();
+        department.setId(Utils.tryParseToInt(txtId.getText()));
+        department.setName(txtName.getText());
+        return department;
     }
 }
