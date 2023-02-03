@@ -9,6 +9,7 @@ import application.App;
 import gui.listeners.DataChangeListener;
 import gui.util.Alerts;
 import gui.util.Utils;
+import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -17,6 +18,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.Alert.AlertType;
@@ -39,6 +41,9 @@ public class DepartmentListController implements Initializable, DataChangeListen
     private TableColumn<Department, String> tableColumnName;
 
     @FXML
+    private TableColumn<Department, Department> tableColumnEDIT;
+
+    @FXML
     private Button btNewDepartment;
 
     private DepartmentService departmentService;
@@ -47,7 +52,7 @@ public class DepartmentListController implements Initializable, DataChangeListen
 
     public void setDepartmentService(DepartmentService departmentService) {
         this.departmentService = departmentService;
-    }  
+    }
 
     @FXML
     public void onBtNewDepartmentAction(ActionEvent event) {
@@ -77,13 +82,14 @@ public class DepartmentListController implements Initializable, DataChangeListen
         List<Department> departments = departmentService.findAll();
         observableList = FXCollections.observableArrayList(departments);
         tableViewDepartment.setItems(observableList);
+        initEditButtons();
     }
 
     private void createDialogForm(Department department, String absoluteName, Stage parentStage) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(absoluteName));
             Pane pane = loader.load();
-            
+
             DepartmentFormController controller = loader.getController();
             controller.setDepartment(department);
             controller.setDepartmentService(new DepartmentService());
@@ -94,7 +100,7 @@ public class DepartmentListController implements Initializable, DataChangeListen
             dialogStage.setTitle("Enter Department Data");
             dialogStage.setScene(new Scene(pane));
             dialogStage.setResizable(false);
-            dialogStage.initOwner(parentStage); 
+            dialogStage.initOwner(parentStage);
             dialogStage.initModality(Modality.WINDOW_MODAL);
             dialogStage.showAndWait();
         } catch (IOException e) {
@@ -106,5 +112,24 @@ public class DepartmentListController implements Initializable, DataChangeListen
     public void onDataChanged() {
         updateTableViewData();
     }
-    
+
+    private void initEditButtons() {
+        tableColumnEDIT.setCellValueFactory(param -> new ReadOnlyObjectWrapper<>(param.getValue()));
+        tableColumnEDIT.setCellFactory(param -> new TableCell<Department, Department>() {
+            private final Button button = new Button("edit");
+
+            @Override
+            protected void updateItem(Department obj, boolean empty) {
+                super.updateItem(obj, empty);
+                if (obj == null) {
+                    setGraphic(null);
+                    return;
+                }
+                setGraphic(button);
+                button.setOnAction(
+                        event -> createDialogForm(obj, "/gui/DepartmentForm.fxml", Utils.currentStage(event)));
+            }
+        });
+    }
+
 }
