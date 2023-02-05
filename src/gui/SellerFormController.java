@@ -1,6 +1,7 @@
 package gui;
 
 import java.net.URL;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -164,12 +165,31 @@ public class SellerFormController implements Initializable {
         if (txtName.getText() == null || txtName.getText().trim().equals("")) {
             exception.addError("name", "Field can't be empty");
         }
+        seller.setName(txtName.getText());
+
+        if (txtEmail.getText() == null || txtEmail.getText().trim().equals("")) {
+            exception.addError("email", "Field can't be empty");
+        }
+        seller.setEmail(txtEmail.getText());
+
+        if (txtBaseSalary.getText() == null || txtBaseSalary.getText().trim().equals("")) {
+            exception.addError("baseSalary", "Field can't be empty");
+        }
+        seller.setBaseSalary(Utils.tryParseToDouble(txtBaseSalary.getText()));
+
+        if (dpBirthDate.getValue() == null) {
+            exception.addError("birthDate", "Field can't be empty");
+        } else {
+            Instant instant = Instant.from(dpBirthDate.getValue().atStartOfDay(ZoneId.systemDefault()));
+            seller.setBirthDate(instant);
+        }
+
+        seller.setDepartment(comboBoxDepartment.getValue());
 
         if (exception.getErrors().size() > 0) {
             throw exception;
         }
 
-        seller.setName(txtName.getText());
         return seller;
     }
 
@@ -189,9 +209,10 @@ public class SellerFormController implements Initializable {
     private void setErrorMessages(Map<String, String> errors) {
         Set<String> fields = errors.keySet();
 
-        if (fields.contains("name")) {
-            labelErroName.setText(errors.get("name"));
-        }
+        labelErroName.setText(fields.contains("name") ? errors.get("name") : "");
+        labelErroEmail.setText(fields.contains("email") ? errors.get("email") : "");
+        labelErroBaseSalary.setText(fields.contains("baseSalary") ? errors.get("baseSalary") : "");
+        labelErroBirthDate.setText(fields.contains("birthDate") ? errors.get("birthDate") : "");
     }
 
     private void initializeComboBoxDepartment() {
